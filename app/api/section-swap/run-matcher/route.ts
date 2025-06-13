@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth-config"
-import { findMatchingSwapRequests, expireOldMatches } from "@/lib/section-swap-matcher"
+import { checkExpiredMatches, findAndMatchSwapRequests } from "@/lib/section-swap-matcher";
+
 
 export async function POST(req: NextRequest) {
   try {
