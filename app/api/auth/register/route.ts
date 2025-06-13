@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/db"
-import { hashPassword, generateToken, generateReferralCode } from "@/lib/auth"
+import { generateToken, generateReferralCode } from "@/lib/auth"
 
 export async function POST(req: NextRequest) {
   try {
