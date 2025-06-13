@@ -2,7 +2,7 @@
 import type { NextAuthOptions } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 import { MongoDBAdapter } from "@auth/mongodb-adapter"
-import clientPromise from "@/lib/db"
+import clientPromise from "@/lib/db" // Updated import
 import { generateReferralCode } from "@/lib/auth"
 
 export const authOptions: NextAuthOptions = {
@@ -27,31 +27,18 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async session({ session, token }) {
+    async session({ session, user }) {
       if (session.user) {
-        session.user.id = token.sub!
-        session.user.role = token.role || "free"
-        session.user.referralCode = token.referralCode
-        session.user.onboardingCompleted = token.onboardingCompleted || false
-        session.user.branch = token.branch
-        session.user.year = token.year
-        session.user.section = token.section
-        session.user.phone = token.phone
+        session.user.id = user.id
+        session.user.role = user.role || "free"
+        session.user.referralCode = user.referralCode
+        session.user.onboardingCompleted = user.onboardingCompleted || false
+        session.user.branch = user.branch
+        session.user.year = user.year
+        session.user.section = user.section
+        session.user.phone = user.phone
       }
       return session
-    },
-    async jwt({ token, user }) {
-      if (user) {
-        token.sub = user.id
-        token.role = user.role || "free"
-        token.referralCode = user.referralCode
-        token.onboardingCompleted = user.onboardingCompleted || false
-        token.branch = user.branch
-        token.year = user.year
-        token.section = user.section
-        token.phone = user.phone
-      }
-      return token
     }
   },
   pages: {
@@ -59,9 +46,8 @@ export const authOptions: NextAuthOptions = {
     error: "/login",
   },
   session: {
-    strategy: "database",
+    strategy: "database", // Required for MongoDB adapter
     maxAge: 30 * 24 * 60 * 60,
   },
   secret: process.env.NEXTAUTH_SECRET!,
 }
-
