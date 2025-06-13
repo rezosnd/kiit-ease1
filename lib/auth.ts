@@ -10,20 +10,26 @@ export function generateReferralCode(name: string): string {
 }
 
 // Generate JWT token
-export function generateToken(payload: any): string {
-  return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "30d" })
+export function generateToken(payload: object): string {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET environment variable is not set")
+  }
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "30d" })
 }
 
 // Verify JWT token
-export function verifyToken(token: string): any {
+export function verifyToken(token: string): object | null {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET environment variable is not set")
+  }
   try {
-    return jwt.verify(token, process.env.JWT_SECRET!)
-  } catch (error) {
+    return jwt.verify(token, process.env.JWT_SECRET)
+  } catch {
     return null
   }
 }
 
-// Get user from request
+// Get user from request (Next.js API Route or Middleware)
 export async function getUserFromRequest(req: NextRequest) {
   try {
     const token = req.cookies.get("token")?.value
@@ -31,7 +37,8 @@ export async function getUserFromRequest(req: NextRequest) {
 
     const decoded = verifyToken(token)
     return decoded
-  } catch (error) {
+  } catch {
     return null
   }
 }
+
