@@ -1,16 +1,12 @@
+// lib/auth-config.ts
 import type { NextAuthOptions } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 import { MongoDBAdapter } from "@auth/mongodb-adapter"
-import { connectToDatabase } from "@/lib/db"
+import clientPromise from "@/lib/db"
 import { generateReferralCode } from "@/lib/auth"
 
 export const authOptions: NextAuthOptions = {
-  adapter: MongoDBAdapter({
-    db: (async () => {
-      const { db } = await connectToDatabase()
-      return db
-    })(),
-  }),
+  adapter: MongoDBAdapter(clientPromise),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -31,22 +27,22 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async session({ session, user }) {
+    async session({ session, token }) {
       if (session.user) {
-        session.user.id = user.id
-        session.user.role = user.role || "free"
-        session.user.referralCode = user.referralCode
-        session.user.onboardingCompleted = user.onboardingCompleted || false
-        session.user.branch = user.branch
-        session.user.year = user.year
-        session.user.section = user.section
-        session.user.phone = user.phone
+        session.user.id = token.sub!
+        session.user.role = token.role || "free"
+        session.user.referralCode = token.referralCode
+        session.user.onboardingCompleted = token.onboardingCompleted || false
+        session.user.branch = token.branch
+        session.user.year = token.year
+        session.user.section = token.section
+        session.user.phone = token.phone
       }
       return session
     },
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id
+        token.sub = user.id
         token.role = user.role || "free"
         token.referralCode = user.referralCode
         token.onboardingCompleted = user.onboardingCompleted || false
@@ -56,15 +52,16 @@ export const authOptions: NextAuthOptions = {
         token.phone = user.phone
       }
       return token
-    },
+    }
   },
   pages: {
     signIn: "/login",
     error: "/login",
   },
   session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    strategy: "database",
+    maxAge: 30 * 24 * 60 * 60,
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET!,
 }
+
